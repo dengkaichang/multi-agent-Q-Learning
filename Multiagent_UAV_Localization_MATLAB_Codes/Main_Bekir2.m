@@ -15,7 +15,7 @@ obstacles_1 = [];
 %figure(1);
 %imshow(mapimage);
 %hold on;
-for iteration=1:1
+for iteration=1:10
 [stParameters]=initialization;
 [stParameters_1]=initialization_1;
 [stParameters_2]=initialization_2;
@@ -40,17 +40,21 @@ Signaling=0;        % While loop until distance<10m
 PT=13;              % Transmit Power
 Prec2=[-140 -140 -140];
 Prec3=[-140 -140 -140];
+alldistence=0;
+alldistence_1=0;
 while (Signaling<1)
     
     dist        = stParameters.LocUE-stParameters.LocUAV;
     dist_1        = stParameters_1.LocUE-stParameters_1.LocUAV;
     distance    = sqrt(dist(1)^2+dist(2)^2); %Distance between UE and UAV
     distance_1    = sqrt(dist_1(1)^2+dist_1(2)^2);
+    
     if (distance < 10.1 || distance_1 < 10.1)  %uavSpeed*1.5 %Break condition
         Signaling = 1;
         break;
     end
     stParameters.Learning = (11-stParameters.S_Current)/10;
+    stParameters_1.Learning = (11-stParameters_1.S_Current)/10;
 %         stParameters.Learning = (0.75);
 
     PL   = 128.1 + 37.6 * log10(distance/1000);
@@ -65,11 +69,13 @@ while (Signaling<1)
     stParameters=Q_learning(Prec(1)-sum(Prec2)/3,stParameters,Prec(1));
     stParameters_1=Q_learning_1(Prec_1(1)-sum(Prec3)/3,stParameters_1,Prec_1(1));
     % mutli-agent coor-coor
-    stParameters_2=Q_learning_2((Prec(1)-sum(Prec2)/3)+(Prec_1(1)-sum(Prec3)/3),stParameters_2,(Prec(1)+Prec_1(1))/2);
-    stParameters_2.Action = stParameters.Action;
-    stParameters_2.Action = stParameters_1.Action;
-    stParameters_2.S_Current = stParameters.S_Current;
-    stParameters_2.S_Current = stParameters_1.S_Current;
+    stParameters.Q_TABLE = stParameters.Q_TABLE - stParameters_2.Q_TABLE;
+    stParameters_1.Q_TABLE = stParameters_1.Q_TABLE - stParameters_2.Q_TABLE;
+    stParameters_2.Q_TABLE = stParameters_2.Q_TABLE + stParameters.Q_TABLE + stParameters_1.Q_TABLE;
+    stParameters.Q_TABLE = stParameters_2.Q_TABLE;
+    stParameters_1.Q_TABLE = stParameters_2.Q_TABLE;
+    
+    
     
     oldLoc=stParameters.LocUAV;
     oldLoc_1=stParameters_1.LocUAV;
@@ -77,6 +83,12 @@ while (Signaling<1)
     stParameters_1.LocUAV = Q_action(stParameters_1.LocUAV,stParameters_1.Action,movetime);
     newLoc=stParameters.LocUAV;
     newLoc_1=stParameters_1.LocUAV;
+    %distence
+    pathdistence=sqrt((newLoc(1)-oldLoc(1))^2+(newLoc(2)-oldLoc(2))^2);
+    alldistence=alldistence + pathdistence;
+    pathdistence_1=sqrt((newLoc_1(1)-oldLoc_1(1))^2+(newLoc_1(2)-oldLoc_1(2))^2);
+    alldistence_1=alldistence_1 + pathdistence_1;
+    
     ObjValObs = feval(ObjObstacle,map,oldLoc,newLoc);
     ObjValObs_1 = feval(ObjObstacle_1,map,oldLoc_1,newLoc_1);
     
@@ -135,7 +147,7 @@ while (Signaling<1)
     hold on;
     plot(10*[oldLoc(1) newLoc(1)],10*[oldLoc(2) newLoc(2)],'b','LineWidth',1);
     hold on;
-    plot(10*[oldLoc_1(1) newLoc_1(1)],10*[oldLoc_1(2) newLoc_1(2)],'b','LineWidth',1);
+    plot(10*[oldLoc_1(1) newLoc_1(1)],10*[oldLoc_1(2) newLoc_1(2)],'r','LineWidth',1);
     hold on;
     stParameters.LocUAV
     stParameters_1.LocUAV
@@ -145,6 +157,12 @@ while (Signaling<1)
 end
 Sure = toc;
 timer(iteration)=time*samplingDuration;
+eachdistence(iteration)=alldistence;
+eachdistence_1(iteration)=alldistence_1;
 end
 timer
-ort = sum(timer)/iteration
+avgt = sum(timer)/iteration
+eachdistence
+avgalldistence = sprintf('%2f',sum(eachdistence)/iteration)
+eachdistence_1
+avgalldistence_1 = sprintf('%.2f',sum(eachdistence_1)/iteration)

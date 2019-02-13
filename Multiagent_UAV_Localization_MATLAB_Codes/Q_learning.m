@@ -12,7 +12,6 @@ function [stParameters] = Q_learning(P_rx,stParameters,Preceived)
 %eval(SplitStruct('stParameters'))
 S_Next = Q_State(stParameters.Action,Preceived) ; % Identifying the next state
 Reward = P_rx; % Reward function
-
 % Bekir
 % stParameters.Q_TABLE(stParameters.S_Current,stParameters.Action) = (1-stParameters.Learning)*stParameters.Q_TABLE(stParameters.S_Current,stParameters.Action) + stParameters.Learning*(Reward + stParameters.lamda*max(stParameters.Q_TABLE(S_Next,:))); % Updating Q-table
 % Adem
