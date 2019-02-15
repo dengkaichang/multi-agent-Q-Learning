@@ -66,14 +66,20 @@ while (Signaling<1)
 
     location=stParameters.LocUAV;
     location_1=stParameters_1.LocUAV;
+    %old state
+    S_Old = Q_State(stParameters.Action,Prec(1));
+    S_Old_1 = Q_State(stParameters_1.Action,Prec_1(1));
+    
     stParameters=Q_learning(Prec(1)-sum(Prec2)/3,stParameters,Prec(1));
     stParameters_1=Q_learning_1(Prec_1(1)-sum(Prec3)/3,stParameters_1,Prec_1(1));
-    % mutli-agent coor-coor
+    % mutli-agent coor-coor & coor-uncoor
+    if (S_Old == S_Old_1)
     stParameters.Q_TABLE = stParameters.Q_TABLE - stParameters_2.Q_TABLE;
     stParameters_1.Q_TABLE = stParameters_1.Q_TABLE - stParameters_2.Q_TABLE;
     stParameters_2.Q_TABLE = stParameters_2.Q_TABLE + stParameters.Q_TABLE + stParameters_1.Q_TABLE;
     stParameters.Q_TABLE = stParameters_2.Q_TABLE;
     stParameters_1.Q_TABLE = stParameters_2.Q_TABLE;
+    end
     
     
     
